@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://noteodainavi.vercel.app/sitemap.xml
+Sitemap: https://odai.mechatora.com/sitemap.xml

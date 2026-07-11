@@ -12,6 +12,7 @@ function normalizeTag(raw: string): string {
   return (raw.startsWith("#") ? raw.slice(1) : raw).trim();
 }
 
+// i-mobile 広告スロット（クライアント側でスクリプトを注入）
 function AdSlotIMobile({ id, pid, mid, asid, className = "" }: {
   id: string;
   pid: number;
@@ -38,6 +39,56 @@ function AdSlotIMobile({ id, pid, mid, asid, className = "" }: {
   return (
     <div className={`flex justify-center overflow-hidden ${className}`}>
       <div id={id} />
+    </div>
+  );
+}
+
+// admax（忍者アドマックス）広告スロット
+function AdmaxSlot({ id, src, className = "" }: {
+  id: string;
+  src: string;
+  className?: string;
+}) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const slot = document.getElementById(id);
+    if (!slot || slot.dataset.injected) return;
+    slot.dataset.injected = "1";
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = src;
+    slot.appendChild(s);
+  }, [id, src]);
+
+  return (
+    <div className={`flex justify-center overflow-hidden ${className}`}>
+      <div id={id} />
+    </div>
+  );
+}
+
+// A8.net 成果報酬（アフィリエイト）バナー
+function A8Banner({ href, imgSrc, pixelSrc, width, height, className = "" }: {
+  href: string;
+  imgSrc: string;
+  pixelSrc: string;
+  width: number;
+  height: number;
+  className?: string;
+}) {
+  return (
+    <div className={`flex justify-center ${className}`}>
+      <a href={href} rel="nofollow sponsored noopener" target="_blank">
+        <img
+          src={imgSrc}
+          width={width}
+          height={height}
+          alt=""
+          loading="lazy"
+          style={{ maxWidth: "100%", height: "auto", border: 0 }}
+        />
+      </a>
+      <img src={pixelSrc} width={1} height={1} alt="" style={{ border: 0 }} />
     </div>
   );
 }
@@ -75,17 +126,6 @@ export default function App() {
   useEffect(() => {
     loadOdaiTags();
   }, [loadOdaiTags]);
-
-  // admax: dynamically inject script so it targets the correct div
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const slot = document.getElementById("admax-slot");
-    if (!slot || slot.dataset.injected) return;
-    slot.dataset.injected = "1";
-    const s = document.createElement("script");
-    s.src = "https://adm.shinobi.jp/s/90ed39ca7ef484fe00c815f2572c5101";
-    slot.appendChild(s);
-  }, []);
 
   const addTags = useCallback(
     (rawTags: string[]) => {
@@ -162,11 +202,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Ad 1: ヘッダー直下 — ページ表示直後の最初の視線 */}
-      <div className="bg-white border-b border-gray-100 py-2">
-        <AdSlotIMobile id="im-1c19029a5edd444d8406879f65a145d3" pid={84386} mid={593350} asid={1933211} />
-      </div>
-
       <main className="max-w-2xl mx-auto px-5 py-6 space-y-4">
         {/* Loading */}
         {isLoading && (
@@ -181,6 +216,18 @@ export default function App() {
           <p className="text-sm text-gray-600 leading-relaxed">
             お題タグは 2 つまでしかつけられず、記事更新時にどれがお題タグかわからないイライラを解消するためのものです。
           </p>
+        </div>
+
+        {/* 成果報酬（A8）468x60 — ページ上部・高視認 */}
+        <div>
+          <p className="text-[10px] text-gray-300 mb-1 text-center">スポンサーリンク</p>
+          <A8Banner
+            href="https://px.a8.net/svt/ejp?a8mat=4B7VL2+ANFO3U+52IU+5Z6WX"
+            imgSrc="https://www21.a8.net/svt/bgt?aid=260708006644&wid=024&eno=01&mid=s00000023655001004000&mc=1"
+            pixelSrc="https://www19.a8.net/0.gif?a8mat=4B7VL2+ANFO3U+52IU+5Z6WX"
+            width={468}
+            height={60}
+          />
         </div>
 
         {/* Sync warning */}
@@ -206,15 +253,6 @@ export default function App() {
 
         {/* Tag input */}
         {!isLoading && <TagInput onAddTags={addTags} />}
-
-        {/* Ad 2: タグ入力直後 — 操作完了後の自然な視線停止点 */}
-        {!isLoading && (
-          <AdSlotIMobile
-            id="im-8f248ad9a4da42129afa6d5accadc656"
-            pid={84386} mid={593351} asid={1933212}
-            className="bg-white rounded-2xl border border-gray-100 py-3"
-          />
-        )}
 
         {/* Tag list */}
         {!isLoading && userTags.length > 0 && (
@@ -271,6 +309,34 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* 成果報酬（A8）300x250 x3 — メイン操作直後の最注目ポイント（最もクリックされやすい位置） */}
+        <section className="bg-white rounded-2xl border border-gray-200 p-5">
+          <p className="text-[10px] text-gray-300 mb-3 text-center">スポンサーリンク</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <A8Banner
+              href="https://px.a8.net/svt/ejp?a8mat=4B43JH+8JTMA2+5WBM+5YZ75"
+              imgSrc="https://www27.a8.net/svt/bgt?aid=260531693517&wid=024&eno=01&mid=s00000027517001003000&mc=1"
+              pixelSrc="https://www14.a8.net/0.gif?a8mat=4B43JH+8JTMA2+5WBM+5YZ75"
+              width={300}
+              height={250}
+            />
+            <A8Banner
+              href="https://px.a8.net/svt/ejp?a8mat=4B1THS+8SR4CQ+3T6C+NU729"
+              imgSrc="https://www29.a8.net/svt/bgt?aid=260425360532&wid=024&eno=01&mid=s00000017778004004000&mc=1"
+              pixelSrc="https://www12.a8.net/0.gif?a8mat=4B1THS+8SR4CQ+3T6C+NU729"
+              width={300}
+              height={250}
+            />
+            <A8Banner
+              href="https://px.a8.net/svt/ejp?a8mat=4AXGGI+AGVWGA+5EX8+609HT"
+              imgSrc="https://www25.a8.net/svt/bgt?aid=260221842633&wid=024&eno=01&mid=s00000025262001009000&mc=1"
+              pixelSrc="https://www11.a8.net/0.gif?a8mat=4AXGGI+AGVWGA+5EX8+609HT"
+              width={300}
+              height={250}
+            />
+          </div>
+        </section>
 
         {/* How-to */}
         {!isLoading && (
@@ -363,8 +429,13 @@ export default function App() {
         </section>
       </main>
 
-      {/* Ad 3: admax — コンテンツ末尾、フッター直前のスクロール到達点 */}
-      <div className="max-w-2xl mx-auto px-5 py-4 flex justify-center" id="admax-slot" />
+      {/* クリック広告（i-mobile x2 + admax）: PCは右側固定サイドバー / モバイルは下部インライン */}
+      <aside className="w-full max-w-2xl mx-auto px-5 mt-4 mb-2 space-y-3 xl:mt-0 xl:mb-0 xl:px-0 xl:w-[300px] xl:fixed xl:top-24 xl:right-4 xl:max-h-[calc(100vh-120px)] xl:overflow-y-auto z-10">
+        <p className="text-[10px] text-gray-300 text-center xl:text-left">スポンサー</p>
+        <AdSlotIMobile id="im-8479f1aaa16845efbbc1211b911f7a8b" pid={84386} mid={593350} asid={1933211} />
+        <AdSlotIMobile id="im-78ffbac5df3447959f17967106147e4f" pid={84386} mid={593351} asid={1933212} />
+        <AdmaxSlot id="admax-6e73a94f0d038af4a36115583362e072" src="https://adm.shinobi.jp/s/6e73a94f0d038af4a36115583362e072" />
+      </aside>
 
       {/* Footer */}
       <footer className="max-w-2xl mx-auto px-5 pb-12 pt-4">
